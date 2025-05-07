@@ -15,13 +15,12 @@ local function parseAndExecute(commandStr)
     local methodName = parts[1]
 
     -- Ambiente sicuro per valutare i parametri
-    local safeEnv = {
-        colors = colors,     -- Consente colors.red, ecc.
+    local safeEnv = setmetatable({
+        colors = colors,  -- Permetti l'accesso alla tabella colors
         ["true"] = true,
         ["false"] = false,
-        ["nil"] = nil,
-        _G = _G  -- Aggiungi _G per accedere a tutte le funzioni globali
-    }
+        ["nil"] = nil
+    }, { __index = _G })  -- Usa l'ambiente globale (inclusi metodi globali come drawLine)
 
     -- Costruzione della lista di parametri
     local args = {}
