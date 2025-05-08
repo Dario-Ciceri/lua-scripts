@@ -6,22 +6,28 @@ modem.open(CHANNEL)
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 monitor.clear()
 monitor.setCursorPos(1, 1)
-monitor.setTextScale(1)
+monitor.setTextScale(5) 
 
 local function displayMessage(msg)
-  monitor.clear()
-  monitor.setCursorPos(1, 1)
-  monitor.write("Received message:")
   
   if type(msg) == "table" and msg.type == "input_update" then
+  
+    if msg.right then
+        monitor.setBackgroundColor(colors.red)
+        monitor.clear()
+        monitor.write("14")
+        print(msg.right)
+    else
+        monitor.setBackgroundColor(colors.green)
+        monitor.clear()
+        monitor.write("14")
+        print(msg.right)
+    end
 
-    monitor.setCursorPos(1, 2)
-    monitor.write("Train signal: " .. tostring(msg.right))
-    monitor.setCursorPos(1, 3)
-    monitor.write("Train staion: " .. tostring(msg.left))
   else
-    monitor.setCursorPos(1, 2)
-    monitor.write("Invalid message format")
+      monitor.setBackgroundColor(colors.black)
+      monitor.setCursorPos(1, 2)
+      monitor.write("Invalid message format")
   end
 end
 
