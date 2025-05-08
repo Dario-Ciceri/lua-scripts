@@ -15,12 +15,10 @@ local function displayMessage(msg)
   
   if type(msg) == "table" and msg.type == "input_update" then
 
-    if msg.right then
-        monitor.setTextColor(colors.red)
-    else
-        monitor.setTextColor(colors.green)
-    end
-
+    monitor.setCursorPos(1, 2)
+    monitor.write("Train signal: " .. tostring(msg.right))
+    monitor.setCursorPos(1, 3)
+    monitor.write("Train staion: " .. tostring(msg.left))
   else
     monitor.setCursorPos(1, 2)
     monitor.write("Invalid message format")
