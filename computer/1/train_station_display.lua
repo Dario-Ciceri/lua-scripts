@@ -1,27 +1,35 @@
-local modem = peripheral.find("modem") or error("Nessun modem trovato", 0)
+local modem = peripheral.find("modem") or error("No modem attached", 0)
 local CHANNEL = 14
+
 modem.open(CHANNEL)
 
-local monitor = peripheral.find("monitor") or error("Nessun monitor trovato", 0)
-monitor.setTextScale(1)
+local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 monitor.clear()
+monitor.setCursorPos(1, 1)
+monitor.setTextScale(1)
 
-local function displayNumber(color)
-  monitor.setTextColor(color)
+local function displayMessage(msg)
+  monitor.clear()
   monitor.setCursorPos(1, 1)
-  monitor.write("14")
-end
+  monitor.write("Received message:")
+  
+  if type(msg) == "table" and msg.type == "input_update" then
 
-local function handleModemMessage(message)
-  if type(message) == "table" and message.type == "input_update" then
-    local color = redstone.getInput("left") and colors.red or colors.green
-    displayNumber(color)
+    if msg.right
+        monitor.setTextColor(colors.red)
+    else
+        monitor.setTextColor(colors.green)
+    end
+
+  else
+    monitor.setCursorPos(1, 2)
+    monitor.write("Invalid message format")
   end
 end
 
 while true do
-  local event, side, channel, replyChannel, message, distance = os.pullEvent()
-  if event == "modem_message" and channel == CHANNEL then
-    handleModemMessage(message)
+  local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
+  if channel == CHANNEL then
+    displayMessage(message)
   end
 end
