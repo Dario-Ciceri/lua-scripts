@@ -1,40 +1,146 @@
 local modem = peripheral.find("modem") or error("No modem attached", 0)
 local CHANNEL = 14
-
 modem.open(CHANNEL)
 
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
+term.redirect(monitor)
 
-monitor.setBackgroundColor(colors.black)
-monitor.clear()
-monitor.setCursorPos(1, 1)
-monitor.setTextScale(15) 
+-- Tabella 7 segmenti: ogni cifra è una matrice 5x3
+local digits = {
+  -- 0
+  {
+    {1,1,1},
+    {1,0,1},
+    {1,0,1},
+    {1,0,1},
+    {1,1,1}
+  },
+  -- 1
+  {
+    {0,0,1},
+    {0,0,1},
+    {0,0,1},
+    {0,0,1},
+    {0,0,1}
+  },
+  -- 2
+  {
+    {1,1,1},
+    {0,0,1},
+    {1,1,1},
+    {1,0,0},
+    {1,1,1}
+  },
+  -- 3
+  {
+    {1,1,1},
+    {0,0,1},
+    {0,1,1},
+    {0,0,1},
+    {1,1,1}
+  },
+  -- 4
+  {
+    {1,0,1},
+    {1,0,1},
+    {1,1,1},
+    {0,0,1},
+    {0,0,1}
+  },
+  -- 5
+  {
+    {1,1,1},
+    {1,0,0},
+    {1,1,1},
+    {0,0,1},
+    {1,1,1}
+  },
+  -- 6
+  {
+    {1,1,1},
+    {1,0,0},
+    {1,1,1},
+    {1,0,1},
+    {1,1,1}
+  },
+  -- 7
+  {
+    {1,1,1},
+    {0,0,1},
+    {0,1,0},
+    {0,1,0},
+    {0,1,0}
+  },
+  -- 8
+  {
+    {1,1,1},
+    {1,0,1},
+    {1,1,1},
+    {1,0,1},
+    {1,1,1}
+  },
+  -- 9
+  {
+    {1,1,1},
+    {1,0,1},
+    {1,1,1},
+    {0,0,1},
+    {1,1,1}
+  }
+}
 
-local function displayMessage(msg)
-  
-  if type(msg) == "table" and msg.type == "input_update" then
-  
-    if msg.right then
-        monitor.setTextColor(colors.red)
-        monitor.clear()
-        monitor.setCursorPos(1, 1)
-        monitor.write("14")
-        print(msg.right)
-    else
-        monitor.setTextColor(colors.green)
-        monitor.clear()
-        monitor.setCursorPos(1, 1)
-        monitor.write("14")
-        print(msg.right)
+-- Costruisce la matrice finale per un numero a 2 cifre
+local function buildNumberMatrix(number)
+  local numStr = tostring(number)
+  local result = {}
+
+  for row = 1, 5 do
+    result[row] = {}
+    for i = 1, #numStr do
+      local digit = tonumber(numStr:sub(i,i))
+      local digitRow = digits[digit + 1][row]
+      for j = 1, #digitRow do
+        table.insert(result[row], digitRow[j])
+      end
+      if i < #numStr then
+        table.insert(result[row], 0) -- spazio tra le cifre
+      end
     end
+  end
 
-  else
-      monitor.setBackgroundColor(colors.black)
-      monitor.setCursorPos(1, 2)
-      monitor.write("Invalid message format")
+  return result
+end
+
+-- Disegna la matrice sul monitor
+local function drawMatrix(matrix, bgColor)
+  for y = 1, #matrix do
+    for x = 1, #matrix[y] do
+      if matrix[y][x] == 1 then
+        paintutils.drawPixel(x, y, bgColor)
+      else
+        paintutils.drawPixel(x, y, colors.black)
+      end
+    end
   end
 end
 
+-- Pulisce il monitor all'avvio
+monitor.setBackgroundColor(colors.black)
+monitor.clear()
+
+-- Elabora i messaggi ricevuti
+local function displayMessage(msg)
+  if type(msg) == "table" and msg.type == "input_update" then
+    local matrix = buildNumberMatrix(14)
+    drawMatrix(matrix, msg.right and colors.red or colors.green)
+  else
+    monitor.setBackgroundColor(colors.black)
+    monitor.setCursorPos(1, 2)
+    monitor.write("Invalid message format")
+  end
+end
+
+-- Ciclo principale in attesa di messaggi
 while true do
   local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
   if channel == CHANNEL then
