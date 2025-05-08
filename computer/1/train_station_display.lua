@@ -5,7 +5,15 @@ modem.open(CHANNEL)
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 term.redirect(monitor)
 
--- Tabella 7 segmenti (dimensione 3x5)
+-- Imposta il background e pulisce lo schermo
+monitor.setBackgroundColor(colors.black)
+monitor.clear()
+
+-- Impostiamo manualmente la dimensione del monitor (14x12)
+local monWidth = 14
+local monHeight = 12
+
+-- Tabella 7 segmenti
 local digits = {
   -- 0
   {
@@ -147,11 +155,6 @@ local function displayMessage(msg)
     monitor.write("Invalid message format")
   end
 end
-
--- Avvia la connessione con il modem
-local monWidth, monHeight = monitor.getSize()
-monitor.setBackgroundColor(colors.black)
-monitor.clear()
 
 -- Ciclo principale in attesa di messaggi
 while true do
