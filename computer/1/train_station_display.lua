@@ -115,11 +115,12 @@ end
 local function drawMatrix(matrix, bgColor)
   for y = 1, #matrix do
     for x = 1, #matrix[y] do
-      if matrix[y][x] == 1 then
-        paintutils.drawPixel(x, y, bgColor)
-      else
-        paintutils.drawPixel(x, y, colors.black)
-      end
+      local color = (matrix[y][x] == 1) and bgColor or colors.black
+      -- Disegna blocco 2x2 per ogni cella
+      paintutils.drawPixel(x*2 - 1, y*2 - 1, color)
+      paintutils.drawPixel(x*2,     y*2 - 1, color)
+      paintutils.drawPixel(x*2 - 1, y*2,     color)
+      paintutils.drawPixel(x*2,     y*2,     color)
     end
   end
 end
