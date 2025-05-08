@@ -15,7 +15,7 @@ local function displayMessage(msg)
   
   if type(msg) == "table" and msg.type == "input_update" then
 
-    if msg.right
+    if msg.right then
         monitor.setTextColor(colors.red)
     else
         monitor.setTextColor(colors.green)
