@@ -7,7 +7,7 @@ term.redirect(monitor)
 
 -- Tabella 7 segmenti: ogni cifra è una matrice 5x3
 local digits = {
-  -- 1 per 11
+  -- 0
   {
     {1,1,1},
     {1,0,1},
