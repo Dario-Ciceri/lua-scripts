@@ -1,10 +1,8 @@
 local modem = peripheral.find("modem") or error("No modem attached", 0)
-
 local CHANNEL = 14
 modem.open(CHANNEL)
 
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
-
 monitor.clear()
 monitor.setCursorPos(1, 1)
 monitor.setTextScale(1)

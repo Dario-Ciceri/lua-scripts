@@ -1,5 +1,6 @@
 local modem = peripheral.find("modem") or error("No modem attached", 0)
-local CHANNEL = 14 
+local CHANNEL = 14
+
 modem.open(CHANNEL)
 
 local function sendInputs()
