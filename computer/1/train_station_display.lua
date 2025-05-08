@@ -5,17 +5,9 @@ modem.open(CHANNEL)
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 term.redirect(monitor)
 
--- Imposta il background e pulisce lo schermo
-monitor.setBackgroundColor(colors.black)
-monitor.clear()
-
--- Impostiamo manualmente la dimensione del monitor (14x12)
-local monWidth = 14
-local monHeight = 12
-
--- Tabella 7 segmenti
+-- Tabella 7 segmenti: ogni cifra è una matrice 5x3
 local digits = {
-  -- 0
+  -- 1 per 11
   {
     {1,1,1},
     {1,0,1},
@@ -25,11 +17,11 @@ local digits = {
   },
   -- 1
   {
-    {0,0,1},
-    {0,0,1},
-    {0,0,1},
-    {0,0,1},
-    {0,0,1}
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1}
   },
   -- 2
   {
@@ -97,7 +89,7 @@ local digits = {
   }
 }
 
--- Funzione per costruire la matrice di un numero
+-- Costruisce la matrice finale per un numero a 2 cifre
 local function buildNumberMatrix(number)
   local numStr = tostring(number)
   local result = {}
@@ -105,50 +97,43 @@ local function buildNumberMatrix(number)
   for row = 1, 5 do
     result[row] = {}
     for i = 1, #numStr do
-      local digit = tonumber(numStr:sub(i, i))
+      local digit = tonumber(numStr:sub(i,i))
       local digitRow = digits[digit + 1][row]
-      
       for j = 1, #digitRow do
         table.insert(result[row], digitRow[j])
       end
-
       if i < #numStr then
-        table.insert(result[row], 0) -- Aggiungi uno spazio tra le cifre
+        table.insert(result[row], 0) -- spazio tra le cifre
       end
     end
   end
-  
+
   return result
 end
 
--- Funzione per disegnare la matrice sul monitor
-local function drawMatrix(matrix, bgColor, offsetX, offsetY)
-  offsetX = offsetX or 0
-  offsetY = offsetY or 0
-  
+-- Disegna la matrice sul monitor
+local function drawMatrix(matrix, bgColor)
   for y = 1, #matrix do
     for x = 1, #matrix[y] do
       local color = (matrix[y][x] == 1) and bgColor or colors.black
-      local px = offsetX + (x - 1) * 2
-      local py = offsetY + (y - 1) * 2
-      -- Disegna ogni "pixel" 2x2
-      paintutils.drawPixel(px,     py,     color)
-      paintutils.drawPixel(px + 1, py,     color)
-      paintutils.drawPixel(px,     py + 1, color)
-      paintutils.drawPixel(px + 1, py + 1, color)
+      -- Disegna blocco 2x2 per ogni cella
+      paintutils.drawPixel(x*2 - 1, y*2 - 1, color)
+      paintutils.drawPixel(x*2,     y*2 - 1, color)
+      paintutils.drawPixel(x*2 - 1, y*2,     color)
+      paintutils.drawPixel(x*2,     y*2,     color)
     end
   end
 end
 
--- Funzione per gestire il messaggio
+-- Pulisce il monitor all'avvio
+monitor.setBackgroundColor(colors.black)
+monitor.clear()
+
+-- Elabora i messaggi ricevuti
 local function displayMessage(msg)
   if type(msg) == "table" and msg.type == "input_update" then
-    local matrix = buildNumberMatrix(tonumber(msg.value or 14)) -- usa il numero ricevuto
-    local matrixWidth = #matrix[1] * 2 + (#matrix[1] - 1)  -- Larghezza totale (inclusi spazi tra cifre)
-    local offsetX = math.floor((monWidth - matrixWidth) / 2)  -- Calcola offset orizzontale per centrare
-    local offsetY = 2  -- Posizione verticale per centratura
-    
-    drawMatrix(matrix, msg.right and colors.red or colors.green, offsetX, offsetY)
+    local matrix = buildNumberMatrix(10)
+    drawMatrix(matrix, msg.right and colors.red or colors.green)
   else
     monitor.setBackgroundColor(colors.black)
     monitor.setCursorPos(1, 2)
