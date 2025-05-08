@@ -15,9 +15,9 @@ local function displayMessage(msg)
   
   if type(msg) == "table" and msg.type == "input_update" then
     monitor.setCursorPos(1, 2)
-    monitor.write("Right Input: " .. tostring(msg.right))
+    monitor.write("Train station: " .. tostring(msg.right))
     monitor.setCursorPos(1, 3)
-    monitor.write("Left Input: " .. tostring(msg.left))
+    monitor.write("Train signal: " .. tostring(msg.left))
   else
     monitor.setCursorPos(1, 2)
     monitor.write("Invalid message format")
