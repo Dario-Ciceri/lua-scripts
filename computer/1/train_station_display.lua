@@ -1,6 +1,9 @@
 local modem = peripheral.find("modem") or error("No modem attached", 0)
 local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 
+-- va gestito meglio redirect 
+term.redirect(monitor)
+
 local CHANNEL = 14
 modem.open(CHANNEL)
 
@@ -42,16 +45,11 @@ local function drawMatrix(matrix, color)
       paintutils.drawPixel(x*2,     y*2 - 1, c)
       paintutils.drawPixel(x*2 - 1, y*2,     c)
       paintutils.drawPixel(x*2,     y*2,     c)
-      local c = matrix[y][x] == 1 and color or colors.black
-      paintutils.drawPixel(x*2 - 1, y*2 - 1, c)
-      paintutils.drawPixel(x*2,     y*2 - 1, c)
-      paintutils.drawPixel(x*2 - 1, y*2,     c)
-      paintutils.drawPixel(x*2,     y*2,     c)
     end
   end
 end
 
-local function showOffline()
+local function initMonitor()
   monitor.setBackgroundColor(colors.black)
   monitor.setTextScale(5)
   monitor.clear()
