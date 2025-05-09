@@ -4,7 +4,11 @@ local monitor = peripheral.find("monitor") or error("No monitor attached", 0)
 term.redirect(monitor)
 
 local CHANNEL = 14
+local TRACK = CHANNEL
+
 modem.open(CHANNEL)
+
+initMonitor()
 
 -- Tabella 7 segmenti: cifre come matrici 5x3
 local digits = {
@@ -64,27 +68,24 @@ local function drawMatrix(matrix, bgColor)
   end
 end
 
--- Visualizza "offline"
-local function showOffline()
+-- Inizializza il monitor
+local function initMonitor()
   monitor.setBackgroundColor(colors.black)
+  monitor.setTextScale(5)
   monitor.clear()
-  monitor.setCursorPos(1, 2)
-  monitor.write("Stato: OFFLINE")
 end
 
--- Visualizza stato online
-local function showOnline()
-  monitor.setBackgroundColor(colors.black)
-  monitor.clear()
+-- Visualizza "offline"
+local function showOffline()
+  initMonitor()
   monitor.setCursorPos(1, 1)
-  monitor.write("Stato: ONLINE")
+  monitor.write("Stato: OFFLINE")
 end
 
 -- Elabora i messaggi ricevuti
 local function handleMessage(msg)
   if type(msg) == "table" and msg.type == "input_update" then
-    showOnline()
-    local matrix = buildNumberMatrix(14)
+    local matrix = buildNumberMatrix(TRACK)
     drawMatrix(matrix, msg.right and colors.red or colors.green)
   end
 end
