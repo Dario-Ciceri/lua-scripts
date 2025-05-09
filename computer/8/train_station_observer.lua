@@ -1,13 +1,11 @@
--- Trova modem
 local modem = peripheral.find("modem") or error("No modem attached", 0)
 local CHANNEL = 14
 modem.open(CHANNEL)
 
-local ackReceived = false
 local RETRIES = 3
 local TIMEOUT = 1
 
--- Invia ping e input, attende ACK
+-- Invia dati e aspetta ACK non bloccante
 local function sendInputs()
   local rightInput = redstone.getInput("right")
   local leftInput = redstone.getInput("left")
@@ -19,31 +17,38 @@ local function sendInputs()
   }
 
   for attempt = 1, RETRIES do
-    ackReceived = false
-    modem.transmit(CHANNEL, CHANNEL, { type = "ping" }) -- Prima ping
+    local ackReceived = false
+    modem.transmit(CHANNEL, CHANNEL, { type = "ping" }) -- PING
     modem.transmit(CHANNEL, CHANNEL, dataMsg)
 
-    local start = os.clock()
-    while os.clock() - start < TIMEOUT do
-      local event, _, rcvChannel, _, msg = os.pullEvent("modem_message")
-      if rcvChannel == CHANNEL and type(msg) == "table" and msg.type == "ack" then
-        ackReceived = true
-        break
+    local timerID = os.startTimer(TIMEOUT)
+
+    while true do
+      local event, p1, p2, p3, p4 = os.pullEvent()
+      if event == "modem_message" then
+        local msg = p4
+        if type(msg) == "table" and msg.type == "ack" then
+          ackReceived = true
+          break
+        end
+      elseif event == "timer" and p1 == timerID then
+        break -- timeout
       end
     end
 
-    if ackReceived then break else print("No ACK, retry " .. attempt) end
+    if ackReceived then
+      return -- OK, fine
+    else
+      print("No ACK, retry #" .. attempt)
+    end
   end
 
-  if not ackReceived then
-    print("Errore: nessun ACK dal ricevitore.")
-  end
+  print("Errore: nessun ACK ricevuto dopo " .. RETRIES .. " tentativi.")
 end
 
--- Elabora eventuali comandi in ingresso
+-- Comandi ricevuti dal monitor
 local function handleModemMessage(message)
-  if type(message) ~= "table" then return end
-  if message.type == "set_output" and type(message.state) == "boolean" then
+  if type(message) == "table" and message.type == "set_output" and type(message.state) == "boolean" then
     redstone.setOutput("front", message.state)
     print("Set front output to:", message.state)
   end

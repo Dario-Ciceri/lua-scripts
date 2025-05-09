@@ -8,9 +8,7 @@ local TRACK = CHANNEL
 
 modem.open(CHANNEL)
 
-initMonitor()
-
--- Tabella 7 segmenti: cifre come matrici 5x3
+-- Cifre stile 7 segmenti
 local digits = {
   {
     {1,1,1}, {1,0,1}, {1,0,1}, {1,0,1}, {1,1,1}
@@ -35,7 +33,7 @@ local digits = {
   }
 }
 
--- Costruisce la matrice per un numero a 2 cifre
+-- Costruisce matrice per numero
 local function buildNumberMatrix(number)
   local numStr = tostring(number)
   local result = {}
@@ -55,7 +53,7 @@ local function buildNumberMatrix(number)
   return result
 end
 
--- Disegna una matrice sul monitor con colori
+-- Disegna matrice
 local function drawMatrix(matrix, bgColor)
   for y = 1, #matrix do
     for x = 1, #matrix[y] do
@@ -68,21 +66,18 @@ local function drawMatrix(matrix, bgColor)
   end
 end
 
--- Inizializza il monitor
 local function initMonitor()
   monitor.setBackgroundColor(colors.black)
   monitor.setTextScale(5)
+  monitor.setCursorPos(1, 1)
   monitor.clear()
 end
 
--- Visualizza "offline"
 local function showOffline()
   initMonitor()
-  monitor.setCursorPos(1, 1)
   monitor.write("Stato: OFFLINE")
 end
 
--- Elabora i messaggi ricevuti
 local function handleMessage(msg)
   if type(msg) == "table" and msg.type == "input_update" then
     local matrix = buildNumberMatrix(TRACK)
@@ -90,29 +85,30 @@ local function handleMessage(msg)
   end
 end
 
--- Timer ping
+-- Timeout ping
 local lastPing = os.clock()
 local TIMEOUT = 5
 
--- Loop principale
+initMonitor()
+
+-- Loop principale non bloccante
 while true do
-  local event, _, channel, _, message = os.pullEvent()
-  
-  if event == "modem_message" and channel == CHANNEL then
+  local event, p1, p2, p3, p4 = os.pullEvent()
+  if event == "modem_message" and p2 == CHANNEL then
+    local message = p4
     if type(message) == "table" then
       if message.type == "ping" then
         lastPing = os.clock()
-        modem.transmit(CHANNEL, CHANNEL, { type = "ack" }) -- Risposta ACK
+        modem.transmit(CHANNEL, CHANNEL, { type = "ack" })
       else
         handleMessage(message)
       end
     end
   end
 
-  -- Mostra OFFLINE se troppo tempo senza ping
   if os.clock() - lastPing > TIMEOUT then
     showOffline()
   end
 
-  os.sleep(0.1)
+  os.sleep(0.05)
 end
