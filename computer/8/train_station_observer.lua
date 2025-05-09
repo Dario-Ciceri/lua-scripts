@@ -1,3 +1,4 @@
+-- Trasmettitore - Invia stato con ACK e ping
 local modem = peripheral.find("modem") or error("No modem attached", 0)
 local CHANNEL = 14
 modem.open(CHANNEL)
@@ -5,12 +6,11 @@ modem.open(CHANNEL)
 local RETRIES = 3
 local TIMEOUT = 1
 
--- Invia dati e aspetta ACK non bloccante
 local function sendInputs()
   local rightInput = redstone.getInput("right")
   local leftInput = redstone.getInput("left")
 
-  local dataMsg = {
+  local message = {
     type = "input_update",
     right = rightInput,
     left = leftInput
@@ -18,39 +18,28 @@ local function sendInputs()
 
   for attempt = 1, RETRIES do
     local ackReceived = false
-    modem.transmit(CHANNEL, CHANNEL, { type = "ping" }) -- PING
-    modem.transmit(CHANNEL, CHANNEL, dataMsg)
+    modem.transmit(CHANNEL, CHANNEL, { type = "ping" })
+    modem.transmit(CHANNEL, CHANNEL, message)
 
-    local timerID = os.startTimer(TIMEOUT)
-
-    while true do
-      local event, p1, p2, p3, p4 = os.pullEvent()
-      if event == "modem_message" then
-        local msg = p4
-        if type(msg) == "table" and msg.type == "ack" then
-          ackReceived = true
-          break
-        end
-      elseif event == "timer" and p1 == timerID then
-        break -- timeout
+    local start = os.clock()
+    while os.clock() - start < TIMEOUT do
+      local event, _, rcvChannel, _, msg = os.pullEvent("modem_message")
+      if rcvChannel == CHANNEL and type(msg) == "table" and msg.type == "ack" then
+        ackReceived = true
+        break
       end
     end
 
-    if ackReceived then
-      return -- OK, fine
-    else
-      print("No ACK, retry #" .. attempt)
-    end
+    if ackReceived then return else print("Retry " .. attempt .. ": no ACK") end
   end
 
-  print("Errore: nessun ACK ricevuto dopo " .. RETRIES .. " tentativi.")
+  print("Errore: ricevitore non risponde.")
 end
 
--- Comandi ricevuti dal monitor
 local function handleModemMessage(message)
   if type(message) == "table" and message.type == "set_output" and type(message.state) == "boolean" then
     redstone.setOutput("front", message.state)
-    print("Set front output to:", message.state)
+    print("Output front:", message.state)
   end
 end
 
